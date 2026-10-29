@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แอปกินอะไรดี - มื้อนี้มีคำตอบ</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #FF6B6B;
+            --primary-gradient: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);
+            --drink-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --secondary: #FFF3E2;
+            --text-dark: #2D3436;
+            --text-muted: #636E72;
+            --bg-gradient: linear-gradient(135deg, #FFF6F4 0%, #FFEAA7 100%);
+            --card-bg: #FFFFFF;
+        }
+
+        * { box-sizing: border-box; font-family: 'Prompt', sans-serif; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+        body { background: var(--bg-gradient); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; color: var(--text-dark); }
+
+        .phone-frame {
+            background: var(--card-bg); width: 100%; max-width: 420px; min-height: 85vh;
+            border-radius: 32px; box-shadow: 0 20px 40px rgba(255, 107, 107, 0.15);
+            padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden;
+        }
+
+        .header { text-align: center; margin-bottom: 20px; }
+        .header h1 { font-size: 24px; font-weight: 700; color: var(--primary); }
+        .header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+
+        .result-container {
+            background: var(--secondary); border: 2px dashed var(--primary); border-radius: 20px;
+            padding: 24px 16px; text-align: center; margin-bottom: 20px; transition: all 0.3s ease;
+        }
+        .result-container.pop { transform: scale(1.03); background: #FFE8D6; }
+        .result-label { font-size: 12px; color: var(--primary); font-weight: 600; margin-bottom: 6px; }
+        .result-food { font-size: 22px; font-weight: 700; color: var(--text-dark); min-height: 50px; display: flex; align-items: center; justify-content: center; text-align: center; }
+
+        .section-title { font-size: 14px; font-weight: 600; margin-bottom: 10px; }
+        .categories-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px; }
+
+        .cat-btn {
+            background: #F8F9FA; border: 2px solid #F1F2F6; border-radius: 14px;
+            padding: 12px 10px; font-size: 13px; font-weight: 500; color: var(--text-dark);
+            cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px;
+        }
+        .cat-btn span { font-size: 18px; }
+        .cat-btn:hover { border-color: var(--primary); background: #FFF5F5; }
+        .cat-btn.active { background: #FFF0ED; border-color: var(--primary); color: var(--primary); font-weight: 600; }
+
+        .drink-main-btn { grid-column: span 2; background: #F0F8FF; border-color: #BEE3F8; color: #2B6CB0; justify-content: center; }
+        .drink-main-btn.active { background: #EBF8FF; border-color: #4299E1; color: #2B6CB0; }
+
+        .random-btn {
+            background: var(--primary-gradient); color: white; border: none; width: 100%;
+            padding: 16px; font-size: 16px; font-weight: 700; border-radius: 16px;
+            cursor: pointer; box-shadow: 0 8px 20px rgba(255, 107, 107, 0.35); transition: transform 0.1s ease;
+        }
+        .random-btn:active { transform: scale(0.97); }
+
+        .footer-credit { text-align: center; font-size: 11px; color: #b2bec3; margin-top: 16px; font-weight: 400; letter-spacing: 0.5px; }
+
+        /* ======== ระบบ Pop-up ======== */
+        .modal-overlay {
+            position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.5); border-radius: 32px;
+            display: flex; justify-content: center; align-items: center;
+            opacity: 0; visibility: hidden; transition: all 0.3s ease; z-index: 10;
+        }
+        .modal-overlay.show { opacity: 1; visibility: visible; }
+        
+        .modal-content {
+            background: white; width: 85%; border-radius: 24px; padding: 24px;
+            transform: translateY(20px) scale(0.95); transition: all 0.3s ease; text-align: center;
+        }
+        .modal-overlay.show .modal-content { transform: translateY(0) scale(1); }
+
+        .modal-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; line-height: 1.5; }
+        .result-modal-food { font-size: 24px; font-weight: 700; color: var(--primary); margin: 15px 0 20px 0; }
+        
+        .drink-cat-btn {
+            width: 100%; background: #F8F9FA; border: 2px solid #E2E8F0; border-radius: 12px;
+            padding: 14px; margin-bottom: 10px; font-size: 14px; font-weight: 600;
+            color: var(--text-dark); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        
+        .action-modal-btn {
+            background: var(--primary-gradient); color: white; border: none;
+            padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer;
+        }
+
+        /* ปุ่ม Google Maps สีเขียวเด่นๆ */
+        .map-modal-btn {
+            background: white; color: #27AE60; border: 2px solid #27AE60;
+            padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; 
+            width: 100%; cursor: pointer; margin-top: 10px; display: flex; align-items: center; justify-content: center; gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .map-modal-btn:active { background: #EAFaf1; }
+        
+        .close-modal-btn {
+            background: none; border: none; color: var(--text-muted); font-size: 14px;
+            margin-top: 12px; cursor: pointer; text-decoration: underline; width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        <div>
+            <div class="header">
+                <h1>😋 กินอะไรดีหนอ?</h1>
+                <p>สุ่มเมนูจบปัญหาโลกแตกมื้อนี้</p>
+            </div>
+
+            <div class="result-container" id="resultContainer">
+                <div class="result-label" id="resultLabel">✨ เมนูที่สุ่มได้คือ ✨</div>
+                <div class="result-food" id="resultText">กดปุ่มสุ่มด้านล่างเลย!</div>
+            </div>
+
+            <div class="section-title">📂 เลือกหมวดหมู่อาหาร</div>
+            <div class="categories-grid" id="categoryContainer">
+                <button class="cat-btn active" onclick="selectFood('orderFood', this)"><span>🍳</span> อาหารตามสั่ง</button>
+                <button class="cat-btn" onclick="selectFood('streetFood', this)"><span>🍢</span> สตรีทฟู้ด</button>
+                <button class="cat-btn" onclick="selectFood('hotpot', this)"><span>🍲</span> หม้อไฟ/ชาบู</button>
+                <button class="cat-btn" onclick="selectFood('noodles', this)"><span>🍜</span> เมนูเส้นต่างๆ</button>
+                <button class="cat-btn" onclick="selectFood('curryRice', this)"><span>🍛</span> ข้าวราดแกง</button>
+                
+                <button class="cat-btn drink-main-btn" id="drinkMainBtn" onclick="openDrinkModal()">
+                    <span id="drinkBtnIcon">🥤</span> <span id="drinkBtnText">เลือกหมวดเครื่องดื่ม ▾</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="action-area">
+            <button class="random-btn" id="randomBtn" onclick="randomMenu()">🎲 สุ่มเมนูตอนนี้เลย!</button>
+            <div class="footer-credit">Developed by b33rrb</div>
+        </div>
+
+        <!-- Pop-up เลือกหมวดเครื่องดื่ม -->
+        <div class="modal-overlay" id="drinkModal">
+            <div class="modal-content">
+                <div class="modal-title" style="color: var(--text-dark);">🥤 อยากดื่มอะไรดี?</div>
+                <button class="drink-cat-btn" onclick="selectDrink('milkTea', '🧋 น้ำชง / ชานม')">🧋 น้ำชง / ชานม</button>
+                <button class="drink-cat-btn" onclick="selectDrink('coffee', '☕ เมนูกาแฟ')">☕ เมนูกาแฟ</button>
+                <button class="drink-cat-btn" onclick="selectDrink('sodaBasic', '🍹 เครื่องดื่ม / โซดา')">🍹 เครื่องดื่ม / โซดา</button>
+                <button class="close-modal-btn" onclick="closeDrinkModal()">ยกเลิก</button>
+            </div>
+        </div>
+
+        <!-- Pop-up แสดงผลลัพธ์สุ่ม -->
+        <div class="modal-overlay" id="resultModal">
+            <div class="modal-content">
+                <div class="modal-title" id="resultModalTitle">🎉 ยินดีด้วย คุณสุ่มได้เมนู...</div>
+                <div class="result-modal-food" id="resultModalMenu">-</div>
+                
+                <button class="action-modal-btn" id="acceptBtn" onclick="closeResultModal()">โอเค กินเมนูนี้แหละ!</button>
+                <!-- ปุ่มหาร้านใกล้ฉันใหม่ -->
+                <button class="map-modal-btn" onclick="openGoogleMaps()">📍 ค้นหาร้านใกล้ฉัน</button>
+                
+                <button class="close-modal-btn" onclick="closeAndRandomAgain()">สุ่มใหม่อีกรอบ</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const foodData = {
+            orderFood: ["ข้าวกะเพราหมูสับไข่ดาว", "ข้าวกะเพราหมูกรอบ", "ข้าวหมูทอดกระเทียมพริกไทย", "ข้าวผัดพริกแกงหมูสามชั้น", "ข้าวผัดหมู/ไก่", "ข้าวผัดต้มยำทะเล", "ข้าวไข่ข้นกุ้ง", "ข้าวคะน้าหมูกรอบ", "ข้าวไข่เจียวหมูสับ", "ผัดพริกเผาหมูกรอบราดข้าว", "ข้าวผัดแหนม", "สุกี้แห้ง/น้ำ"],
+            streetFood: ["ลูกชิ้นปิ้ง/ทอด น้ำจิ้มมะขาม", "ไส้กรอกแดงทอดกรอบ", "หมูปิ้งนมสด + ข้าวเหนียว", "ไส้กรอกอีสานเปรี้ยวๆ", "เกี๊ยวซ่าทอด", "ยำลูกชิ้นรวมมิตร", "เฟรนช์ฟรายส์เขย่าชีส", "ยำมะม่วงปูปลาร้า", "โตเกียวไส้กรอกหมูสับ", "ไก่เขย่าผงแซ่บ"],
+            hotpot: ["ชาบูน้ำดำ (เน้นสามชั้นสไลด์)", "หมาล่าสายพาน (เผ็ดชาสะใจ)", "หมูกระทะชุดใหญ่", "สุกี้ตี๋น้อย (เน้นเนื้อสไลด์+ชีส)", "จิ้มจุ่มหมูล้วน", "แจ่วฮ้อนอีสาน", "หมาล่าทั่ง (ตักชั่งน้ำหนัก)", "หมาล่าเสียบไม้ปิ้ง", "ชุดหม้อไฟทะเลเดือด"],
+            noodles: ["ก๋วยเตี๋ยวเรือน้ำตกข้นๆ", "บะหมี่เกี๊ยวหมูแดง", "เย็นตาโฟต้มยำเครื่องแน่น", "ก๋วยเตี๋ยวไก่ตุ๋นมะระเปื่อยๆ", "มาม่าหม้อไฟต้มยำ", "ผัดซีอิ๊วเส้นใหญ่หมูนุ่ม", "ราดหน้าหมูหมัก", "ผัดไทยกุ้งสด", "เส้นเล็กแห้งต้มยำ"],
+            curryRice: ["ข้าวราดแกงเขียวหวานไก่", "ข้าวราดพะแนงหมู", "ข้าวราดผัดเผ็ดปลาดุกกรอบ", "ข้าวราดไข่พะโล้", "ข้าวราดแกงไตปลา", "ขนมจีนน้ำยาป่า/กะทิ", "ข้าวราดผัดหน่อไม้ดองไก่", "ข้าวแกงส้มชะอมไข่"]
+        };
+
+        const drinkData = {
+            milkTea: ["ชานมไข่มุกไต้หวัน", "ชาไทยเย็น (ชาเย็น)", "ชาเขียวนมสด", "นมสดบราวน์ชูการ์", "โกโก้เย็นสุดเข้มข้น", "เผือกนมสด", "ชาแอปเปิ้ลใส", "ชาพีชหอมๆ", "ชาสตอเบอร์รี่ปั่น", "นมสดคาราเมล"],
+            coffee: ["เอสเพรสโซ่เย็น (หวานมัน)", "อเมริกาโน่เย็น (ไม่หวาน)", "ลาเต้เย็น", "มอคค่าเย็น", "คาปูชิโน่เย็น", "กาแฟโบราณ (โอเลี้ยง)", "ยกล้อ"],
+            sodaBasic: ["แดงมะนาวโซดา", "น้ำอัดลม (โคล่า/เป๊ปซี่)", "บลูฮาวายโซดา", "ลิ้นจี่โซดา", "สตอเบอร์รี่โซดา", "น้ำเก๊กฮวยเย็นชื่นใจ", "น้ำลำไยเนื้อแน่นๆ", "ชาเลมอน (ชามะนาว)"]
+        };
+
+        let currentType = 'food';
+        let currentCategory = 'orderFood';
+        let clickCount = 0; 
+        let currentRolledMenu = ""; // เก็บชื่อเมนูปัจจุบันไว้ส่งต่อให้ Google Maps
+
+        function selectFood(category, element) {
+            currentType = 'food'; currentCategory = category; clickCount = 0; 
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+            
+            document.getElementById('drinkBtnIcon').innerText = '🥤';
+            document.getElementById('drinkBtnText').innerText = 'เลือกหมวดเครื่องดื่ม ▾';
+            document.getElementById('randomBtn').style.background = 'var(--primary-gradient)';
+            document.getElementById('randomBtn').style.boxShadow = '0 8px 20px rgba(255, 107, 107, 0.35)';
+        }
+
+        function openDrinkModal() { document.getElementById('drinkModal').classList.add('show'); }
+        function closeDrinkModal() { document.getElementById('drinkModal').classList.remove('show'); }
+
+        function selectDrink(category, label) {
+            currentType = 'drink'; currentCategory = category; clickCount = 0; 
+            document.querySelectorAll('.cat-btn').forEach(btn => btn.classList.remove('active'));
+            
+            const drinkBtn = document.getElementById('drinkMainBtn');
+            drinkBtn.classList.add('active');
+            document.getElementById('drinkBtnIcon').innerText = '✅';
+            document.getElementById('drinkBtnText').innerText = label;
+            document.getElementById('randomBtn').style.background = 'var(--drink-gradient)';
+            document.getElementById('randomBtn').style.boxShadow = '0 8px 20px rgba(79, 172, 254, 0.35)';
+            closeDrinkModal();
+        }
+
+        function randomMenu() {
+            let pool = currentType === 'food' ? foodData[currentCategory] : drinkData[currentCategory];
+            if (!pool || pool.length === 0) return;
+
+            clickCount++; 
+
+            const container = document.getElementById('resultContainer');
+            const resultText = document.getElementById('resultText');
+            
+            container.classList.add('pop');
+            setTimeout(() => container.classList.remove('pop'), 300);
+
+            document.getElementById('randomBtn').disabled = true;
+
+            let count = 0;
+            let timer = setInterval(() => {
+                let randomIndex = Math.floor(Math.random() * pool.length);
+                resultText.innerText = pool[randomIndex];
+                count++;
+                if (count > 12) {
+                    clearInterval(timer);
+                    document.getElementById('randomBtn').disabled = false;
+                    currentRolledMenu = pool[randomIndex]; // บันทึกเมนูที่สุ่มได้ไว้
+                    showResultPopup(currentRolledMenu); 
+                }
+            }, 50);
+        }
+
+        function showResultPopup(menuName) {
+            const titleElement = document.getElementById('resultModalTitle');
+            const menuElement = document.getElementById('resultModalMenu');
+            const acceptBtn = document.getElementById('acceptBtn');
+            const resultModal = document.getElementById('resultModal');
+
+            acceptBtn.style.background = currentType === 'food' ? 'var(--primary-gradient)' : 'var(--drink-gradient)';
+            menuElement.style.color = currentType === 'food' ? 'var(--primary)' : '#0097e6';
+
+            if (clickCount === 1) {
+                titleElement.innerText = "🎉 ยินดีด้วย! คุณสุ่มได้เมนู...";
+                titleElement.style.color = "var(--text-dark)";
+                acceptBtn.innerText = "โอเค กินเมนูนี้แหละ!";
+            } else if (clickCount === 2) {
+                titleElement.innerText = "🤔 อันนี้ล่ะ เมนูนี้ถูกใจรึยัง !!";
+                titleElement.style.color = "#E67E22";
+                acceptBtn.innerText = "จัดไป วัยรุ่น!";
+            } else if (clickCount === 3) {
+                titleElement.innerText = "🥺 รอบสามแล้วนะ กินเมนูนี้เถอะน้าา\n(ทำตาปริบๆ)";
+                titleElement.style.color = "#27AE60";
+                acceptBtn.innerText = "ใจอ่อนแล้ว กินก็ได้!";
+            } else if (clickCount === 4) {
+                titleElement.innerText = "🙄 รอบที่สี่แล้วนะ! มัวแต่สุ่ม\nร้านจะปิดแล้วมั้งตัวเธอ 5555";
+                titleElement.style.color = "#E74C3C";
+                acceptBtn.innerText = "ยอมแล้วจ้า กินแล้วๆ!";
+            } else if (clickCount === 5) {
+                titleElement.innerText = "😤 ยัง... ยังไม่หยุดสุ่มอีก!\nเลือกไม่ได้ก็กินน้ำเปล่าไปเลยมั้ยยย!";
+                titleElement.style.color = "#C0392B";
+                acceptBtn.innerText = "จบปิ๊ง สั่งเมนูนี้ด่วน!";
+            } else if (clickCount === 6) {
+                titleElement.innerText = "💀 โอ๊ยยยย สุ่มขนาดนี้\nไปต้มมาม่ากินเถอะไป๊ 🤣";
+                titleElement.style.color = "#8E44AD";
+                acceptBtn.innerText = "ตกลงเอาอันนี้แหละ 555";
+            } else {
+                titleElement.innerText = `👽 รอบที่ ${clickCount} แล้วจ้า...\nเอาที่สบายใจ ปุ่มจะพังแล้ว!`;
+                titleElement.style.color = "#7F8C8D";
+                acceptBtn.innerText = "พอแล้วจ้า กินแล้วๆ 🙏";
+            }
+
+            menuElement.innerText = menuName;
+            setTimeout(() => { resultModal.classList.add('show'); }, 200); 
+        }
+
+        // ฟังก์ชันคลีนชื่อเมนูและเปิด Google Maps
+        function openGoogleMaps() {
+            // ตัดข้อความในวงเล็บทิ้ง เช่น "ชาบูน้ำดำ (เน้นสามชั้นสไลด์)" -> "ชาบูน้ำดำ"
+            let cleanMenu = currentRolledMenu.replace(/ *\(.*?\)/g, "");
+            // ถ้ามีเครื่องหมายทับ ให้เอาเฉพาะคำแรก เช่น "ข้าวผัดหมู/ไก่" -> "ข้าวผัดหมู"
+            cleanMenu = cleanMenu.split('/')[0].trim();
+            
+            // สร้างคำค้นหา เช่น "ร้าน ชาบูน้ำดำ ใกล้ฉัน"
+            let searchQuery = encodeURIComponent("ร้าน " + cleanMenu + " ใกล้ฉัน");
+            let mapsUrl = "https://www.google.com/maps/search/" + searchQuery;
+            
+            // เปิดแท็บใหม่ไปที่ Google Maps
+            window.open(mapsUrl, "_blank");
+        }
+
+        function closeResultModal() {
+            document.getElementById('resultModal').classList.remove('show');
+            clickCount = 0; 
+        }
+
+        function closeAndRandomAgain() {
+            document.getElementById('resultModal').classList.remove('show');
+            setTimeout(() => { randomMenu(); }, 300);
+        }
+    </script>
+</body>
+</html>
