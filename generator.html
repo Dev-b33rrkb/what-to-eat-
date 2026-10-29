@@ -191,7 +191,7 @@
             if(menuItems.length === 0) { alert("กรุณาเพิ่มเมนูอาหารอย่างน้อย 1 เมนูครับ!"); return; }
 
             const menuString = menuItems.join(',');
-            // เปลี่ยน URL นี้เป็นโฮสต์จริงของคุณเมื่ออัปโหลดขึ้นเว็บ (เช่น https://b33rrb.github.io/app/)
+            // ลิงก์โฮสต์จริงของคุณถูกฝังไว้เรียบร้อยแล้ว
             const baseUrl = "https://dev-b33rrkb.github.io/what-to-eat-/index.html"; 
             
             generatedFinalUrl = `${baseUrl}?shop=${encodeURIComponent(shop)}&menu=${encodeURIComponent(menuString)}`;
@@ -213,7 +213,6 @@
         function downloadPoster() {
             const posterElement = document.getElementById('posterPreviewBox');
             
-            // ใช้ไลบรารี html2canvas จับภาพกรอบป้าย
             html2canvas(posterElement, { scale: 3, useCORS: true }).then(canvas => {
                 const link = document.createElement('a');
                 link.download = `sticker-qr-${document.getElementById('shopName').value.trim()}.png`;
