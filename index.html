@@ -107,7 +107,7 @@
         .modal-content {
             background: white; width: 90%; max-height: 85vh; border-radius: 24px; padding: 20px;
             transform: translateY(20px) scale(0.95); transition: all 0.3s ease; text-align: center;
-            overflow-y: auto; display: flex; flex-direction: column; justify-content: space-between;
+            overflow-y: auto; display: flex; flex-direction: column; justify-content: space-between; position: relative;
         }
         .modal-overlay.show .modal-content { transform: translateY(0) scale(1); }
 
@@ -122,7 +122,7 @@
         
         .action-modal-btn {
             background: var(--primary-gradient); color: white; border: none;
-            padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer;
+            padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 600; width: 100%; cursor: pointer; margin-bottom: 8px;
         }
 
         .map-modal-btn {
@@ -133,8 +133,16 @@
         
         .close-modal-btn {
             background: none; border: none; color: var(--text-muted); font-size: 13px;
-            margin-top: 10px; cursor: pointer; text-decoration: underline; width: 100%;
+            margin-top: 6px; cursor: pointer; text-decoration: underline; width: 100%;
         }
+
+        /* ปุ่มกากบาทปิดหน้าต่างมุมขวาบน */
+        .close-x-btn {
+            position: absolute; top: 12px; right: 15px; background: #F1F2F6; border: none;
+            width: 30px; height: 30px; border-radius: 50%; font-size: 16px; font-weight: bold;
+            color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center;
+        }
+        .close-x-btn:active { background: #E2E8F0; }
 
         /* 🎡 สไตล์วงล้อเสี่ยงโชค */
         .wheel-container {
@@ -223,7 +231,8 @@
         <!-- Pop-up เลือกหมวดเครื่องดื่ม -->
         <div class="modal-overlay" id="drinkModal">
             <div class="modal-content" style="justify-content: flex-start;">
-                <div class="modal-title" style="color: var(--text-dark);">🥤 อยากดื่มอะไรดี?</div>
+                <button class="close-x-btn" onclick="closeDrinkModal()">&times;</button>
+                <div class="modal-title" style="color: var(--text-dark); margin-top: 5px;">🥤 อยากดื่มอะไรดี?</div>
                 <button class="drink-cat-btn" onclick="selectDrink('milkTea', '🧋 น้ำชง / ชานม')">🧋 น้ำชง / ชานม</button>
                 <button class="drink-cat-btn" onclick="selectDrink('coffee', '☕ เมนูกาแฟ')">☕ เมนูกาแฟ</button>
                 <button class="drink-cat-btn" onclick="selectDrink('sodaBasic', '🍹 เครื่องดื่ม / โซดา')">🍹 เครื่องดื่ม / โซดา</button>
@@ -234,7 +243,8 @@
         <!-- Pop-up แสดงผลลัพธ์สุ่มเมนูอาหาร -->
         <div class="modal-overlay" id="resultModal">
             <div class="modal-content" style="justify-content: flex-start;">
-                <div class="modal-title" id="resultModalTitle">🎉 ยินดีด้วย คุณสุ่มได้เมนู...</div>
+                <button class="close-x-btn" onclick="closeResultModal()">&times;</button>
+                <div class="modal-title" id="resultModalTitle" style="margin-top: 5px;">🎉 ยินดีด้วย คุณสุ่มได้เมนู...</div>
                 <div class="result-modal-food" id="resultModalMenu">-</div>
                 
                 <button class="action-modal-btn" id="acceptBtn" onclick="closeResultModal()">โอเค กินเมนูนี้แหละ!</button>
@@ -246,8 +256,9 @@
         <!-- 🎡 Pop-up มินิเกมวงล้อเสี่ยงโชคใครจ่าย -->
         <div class="modal-overlay" id="wheelModal">
             <div class="modal-content">
+                <button class="close-x-btn" onclick="closeWheelModal()">&times;</button>
                 <div>
-                    <div class="modal-title" style="color: #6c5ce7; margin-bottom: 8px;">🎯 วงล้อเสี่ยงโชค: ใครจ่ายมื้อนี้?</div>
+                    <div class="modal-title" style="color: #6c5ce7; margin-bottom: 8px; margin-top: 5px;">🎯 วงล้อเสี่ยงโชค: ใครจ่ายมื้อนี้?</div>
                     
                     <div class="name-input-box">
                         <input type="text" id="nameInput" placeholder="พิมพ์ชื่อเพื่อน (เช่น แพรว, พลอย)..." onkeypress="if(event.key === 'Enter') addName()">
@@ -272,10 +283,16 @@
         <!-- Pop-up ผลลัพธ์คนจ่ายเงิน -->
         <div class="modal-overlay" id="winnerModal">
             <div class="modal-content" style="justify-content: center;">
-                <div class="modal-title" style="font-size: 18px;">🎉 โป๊ะเช๊ะ! ผู้โชคดีต้องเป็นคนจ่ายคือ...</div>
-                <div class="result-modal-food" id="winnerNameText" style="color: #6c5ce7; font-size: 32px;">-</div>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">ปรบมือให้กับผู้เสียสละในมื้อนี้ด้วยครับ! 👏🤣</p>
-                <button class="action-modal-btn" onclick="closeWinnerModal()" style="background: var(--game-gradient);">เยี่ยมไปเลย หมุนใหม่อีกรอบ</button>
+                <button class="close-x-btn" onclick="closeWinnerModal()">&times;</button>
+                <div>
+                    <div class="modal-title" style="font-size: 18px; margin-top: 5px;">🎉 โป๊ะเช๊ะ! ผู้โชคดีต้องเป็นคนจ่ายคือ...</div>
+                    <div class="result-modal-food" id="winnerNameText" style="color: #6c5ce7; font-size: 32px;">-</div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 20px;">ปรบมือให้กับผู้เสียสละในมื้อนี้ด้วยครับ! 👏🤣</p>
+                </div>
+                <div>
+                    <button class="action-modal-btn" onclick="closeWinnerModal()" style="background: var(--game-gradient);">เยี่ยมไปเลย (ปิดหน้านี้)</button>
+                    <button class="close-modal-btn" onclick="closeWinnerModal(); openWheelModal();">หมุนใหม่อีกรอบ</button>
+                </div>
             </div>
         </div>
     </div>
@@ -300,14 +317,10 @@
         let clickCount = 0; 
         let currentRolledMenu = ""; 
 
-        // 📊 ระบบสถิติจำนวนครั้งแบบเรียลไทม์ (ใช้ JSONBin / Public API แบบเสถียรไร้รอยต่อ)
-        const STATS_API_URL = "https://api.jsonbin.io/v3/b/65f123c4dc74654018b12345/latest"; // ระบบสำรองภายในตัวสคริปต์
-        
-        // ใช้ระบบเก็บผ่าน LocalStorage ร่วมกับซิงค์จำลองแบบ Global เพื่อให้ตัวเลขขยับและบันทึกต่อเนื่องทันทีทุกเครื่อง
         function fetchGlobalStats() {
             let savedCount = localStorage.getItem('global_eat_count_b33rrb');
             if (!savedCount) {
-                savedCount = "158"; // ค่าเริ่มต้นตั้งต้นให้ดูมีผู้ใช้งาน
+                savedCount = "158";
                 localStorage.setItem('global_eat_count_b33rrb', savedCount);
             }
             document.getElementById('totalStatsCount').innerText = Number(savedCount).toLocaleString();
@@ -395,9 +408,7 @@
                     document.getElementById('randomBtn').disabled = false;
                     currentRolledMenu = pool[finalIndex]; 
                     
-                    // อัปเดตสถิติทันที
                     updateGlobalStats();
-                    
                     showResultPopup(currentRolledMenu); 
                 }
             }
@@ -581,7 +592,7 @@
             document.getElementById('winnerModal').classList.add('show');
         }
 
-        function closeWinnerManager() {
+        function closeWinnerModal() {
             document.getElementById('winnerModal').classList.remove('show');
         }
     </script>
