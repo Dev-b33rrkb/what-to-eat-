@@ -136,7 +136,6 @@
             margin-top: 6px; cursor: pointer; text-decoration: underline; width: 100%;
         }
 
-        /* ปุ่มกากบาทปิดหน้าต่างมุมขวาบน */
         .close-x-btn {
             position: absolute; top: 12px; right: 15px; background: #F1F2F6; border: none;
             width: 30px; height: 30px; border-radius: 50%; font-size: 16px; font-weight: bold;
@@ -195,11 +194,10 @@
                 </div>
             </div>
 
-            <!-- 🎡 ปุ่มทางลัดเปิดมินิเกมวงล้อใครจ่าย -->
             <div class="minigame-banner" onclick="openWheelModal()">
                 <div>
                     <h3>🎲 ใครจ่ายมื้อนี้?</h3>
-                    <p>วงล้อเสี่ยงโชค (ตัวหนังสือใหญ่เต็มช่อง)</p>
+                    <p>วงล้อเสี่ยงโชค (สุ่มตกกลางช่องสวยๆ)</p>
                 </div>
                 <span style="font-size: 24px;">🎯</span>
             </div>
@@ -444,7 +442,7 @@
 
 
         /* ==========================================
-           🎯 มินิเกมวงล้อเสี่ยงโชค
+           🎯 มินิเกมวงล้อเสี่ยงโชค (ล็อกเป้าให้ตกกลางช่องเป๊ะๆ)
            ========================================== */
         let namesList = ["แพรว", "พลอย", "ฟ้า", "ส้ม"];
         const wheelColors = ["#FF6B6B", "#4facfe", "#27AE60", "#F39C12", "#9B59B6", "#E74C3C", "#1ABC9C", "#D35400"];
@@ -564,10 +562,20 @@
             const total = slices.length;
             const arcSize = (2 * Math.PI) / total;
 
-            const randomExtraRounds = 7 + Math.floor(Math.random() * 4);
+            // 🌟 สุ่มเลือกช่องเป้าหมาย
             const randomSliceIndex = Math.floor(Math.random() * total);
+            const randomExtraRounds = 7 + Math.floor(Math.random() * 4); // หมุน 7-10 รอบเต็ม
+
+            // คำนวณมุมเพื่อให้เข็มชี้ไปตกที่ "กึ่งกลางพอดีเป๊ะ" ของช่องนั้นๆ (ไม่ใช่ขอบเส้น)
+            // เข็มชี้อยู่ที่มุมด้านบน (12 นาฬิกา หรือ -Math.PI / 2)
+            const targetSliceCenterAngle = -(randomSliceIndex * arcSize + arcSize / 2) - (Math.PI / 2);
             
-            const targetAngle = currentAngle + (randomExtraRounds * 2 * Math.PI) + (randomSliceIndex * arcSize);
+            // ทำให้วงล้อหมุนสะสมรอบเดิมบวกกับมุมเป้าหมายที่คำนวณไว้
+            const normalizedCurrentAngle = currentAngle % (2 * Math.PI);
+            let angleDiff = targetSliceCenterAngle - normalizedCurrentAngle;
+            while (angleDiff < 0) angleDiff += (2 * Math.PI);
+
+            const targetAngle = currentAngle + (randomExtraRounds * 2 * Math.PI) + angleDiff;
             
             currentAngle = targetAngle;
             canvas.style.transform = `rotate(${currentAngle * (180 / Math.PI)}deg)`;
@@ -579,10 +587,7 @@
                 playTickSound(true);
                 spinBtn.disabled = false;
 
-                const normalizedAngle = (2 * Math.PI - (currentAngle % (2 * Math.PI))) % (2 * Math.PI);
-                const winningSliceIndex = Math.floor(normalizedAngle / arcSize) % total;
-                const winnerName = slices[winningSliceIndex];
-
+                const winnerName = slices[randomSliceIndex];
                 showWinnerModal(winnerName);
             }, 7000);
         }
