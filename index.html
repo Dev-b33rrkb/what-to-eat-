@@ -92,7 +92,6 @@
             padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; width: 100%; cursor: pointer;
         }
 
-        /* ปุ่ม Google Maps สีเขียวเด่นๆ */
         .map-modal-btn {
             background: white; color: #27AE60; border: 2px solid #27AE60;
             padding: 12px 24px; border-radius: 12px; font-size: 15px; font-weight: 600; 
@@ -121,7 +120,7 @@
                 <div class="result-food" id="resultText">กดปุ่มสุ่มด้านล่างเลย!</div>
             </div>
 
-            <div class="section-title">📂 เลือกหมวดหมู่อาหาร</div>
+            <div class="section-title" id="sectionTitleLabel">📂 เลือกหมวดหมู่อาหาร</div>
             <div class="categories-grid" id="categoryContainer">
                 <button class="cat-btn active" onclick="selectFood('orderFood', this)"><span>🍳</span> อาหารตามสั่ง</button>
                 <button class="cat-btn" onclick="selectFood('streetFood', this)"><span>🍢</span> สตรีทฟู้ด</button>
@@ -158,7 +157,6 @@
                 <div class="result-modal-food" id="resultModalMenu">-</div>
                 
                 <button class="action-modal-btn" id="acceptBtn" onclick="closeResultModal()">โอเค กินเมนูนี้แหละ!</button>
-                <!-- ปุ่มหาร้านใกล้ฉันใหม่ -->
                 <button class="map-modal-btn" onclick="openGoogleMaps()">📍 ค้นหาร้านใกล้ฉัน</button>
                 
                 <button class="close-modal-btn" onclick="closeAndRandomAgain()">สุ่มใหม่อีกรอบ</button>
@@ -184,7 +182,56 @@
         let currentType = 'food';
         let currentCategory = 'orderFood';
         let clickCount = 0; 
-        let currentRolledMenu = ""; // เก็บชื่อเมนูปัจจุบันไว้ส่งต่อให้ Google Maps
+        let currentRolledMenu = ""; 
+
+        // ระบบรองรับ QR Code เฉพาะร้าน
+        const urlParams = new URLSearchParams(window.location.search);
+        const customShop = urlParams.get('shop');
+        const customMenu = urlParams.get('menu');
+
+        let isCustomShop = false;
+        let customMenuArray = [];
+
+        if (customShop && customMenu) {
+            isCustomShop = true;
+            document.querySelector('.header h1').innerText = `😋 ${customShop}`;
+            document.querySelector('.header p').innerText = "สุ่มเมนูเด็ดของร้านเรามื้อนี้เลย!";
+            document.getElementById('categoryContainer').style.display = 'none';
+            document.getElementById('sectionTitleLabel').style.display = 'none';
+            customMenuArray = customMenu.split(',').map(item => item.trim()).filter(item => item !== "");
+        }
+
+        // ระบบสร้างเสียงเอฟเฟกต์ด้วย Web Audio API (ไม่ต้องโหลดไฟล์เสียงภายนอก)
+        let audioCtx = null;
+        function playTickSound(isFinal = false) {
+            try {
+                if (!audioCtx) {
+                    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = isFinal ? 'triangle' : 'sine';
+                osc.frequency.setValueAtTime(isFinal ? 800 : 400, audioCtx.currentTime);
+                if (isFinal) {
+                    osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
+                }
+
+                gain.gain.setValueAtTime(isFinal ? 0.2 : 0.05, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + (isFinal ? 0.3 : 0.05));
+
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                osc.start();
+                osc.stop(audioCtx.currentTime + (isFinal ? 0.3 : 0.05));
+            } catch(e) {
+                // ป้องกันกรณีเบราว์เซอร์บล็อกเสียงอัตโนมัติ
+            }
+        }
 
         function selectFood(category, element) {
             currentType = 'food'; currentCategory = category; clickCount = 0; 
@@ -213,12 +260,18 @@
             closeDrinkModal();
         }
 
+        // ฟังก์ชันสุ่มเวลา 3.5 วินาที พร้อมเสียงวงล้อหมุน
         function randomMenu() {
-            let pool = currentType === 'food' ? foodData[currentCategory] : drinkData[currentCategory];
+            let pool = [];
+            if (isCustomShop) {
+                pool = customMenuArray;
+            } else {
+                pool = currentType === 'food' ? foodData[currentCategory] : drinkData[currentCategory];
+            }
+
             if (!pool || pool.length === 0) return;
 
             clickCount++; 
-
             const container = document.getElementById('resultContainer');
             const resultText = document.getElementById('resultText');
             
@@ -227,18 +280,34 @@
 
             document.getElementById('randomBtn').disabled = true;
 
-            let count = 0;
-            let timer = setInterval(() => {
-                let randomIndex = Math.floor(Math.random() * pool.length);
-                resultText.innerText = pool[randomIndex];
-                count++;
-                if (count > 12) {
-                    clearInterval(timer);
+            let startTime = Date.now();
+            let duration = 3500; // เวลาสุ่ม 3.5 วินาที
+            let currentInterval = 50;
+
+            function runSlot() {
+                let elapsedTime = Date.now() - startTime;
+                
+                if (elapsedTime < duration) {
+                    let randomIndex = Math.floor(Math.random() * pool.length);
+                    resultText.innerText = pool[randomIndex];
+                    playTickSound(false); // เล่นเสียงติ๊กๆ ระหว่างหมุน
+
+                    // ค่อยๆ หน่วงความเร็วให้ช้าลงตอนใกล้หมดเวลา (เอฟเฟกต์วงล้อเบรก)
+                    currentInterval = 50 + (elapsedTime / duration) * 150;
+                    setTimeout(runSlot, currentInterval);
+                } else {
+                    // จบรอบสุ่ม เลือกผลลัพธ์สุดท้าย
+                    let finalIndex = Math.floor(Math.random() * pool.length);
+                    resultText.innerText = pool[finalIndex];
+                    playTickSound(true); // เล่นเสียงปิ๊งเมื่อหยุด
+                    
                     document.getElementById('randomBtn').disabled = false;
-                    currentRolledMenu = pool[randomIndex]; // บันทึกเมนูที่สุ่มได้ไว้
+                    currentRolledMenu = pool[finalIndex]; 
                     showResultPopup(currentRolledMenu); 
                 }
-            }, 50);
+            }
+
+            runSlot();
         }
 
         function showResultPopup(menuName) {
@@ -284,18 +353,11 @@
             setTimeout(() => { resultModal.classList.add('show'); }, 200); 
         }
 
-        // ฟังก์ชันคลีนชื่อเมนูและเปิด Google Maps
         function openGoogleMaps() {
-            // ตัดข้อความในวงเล็บทิ้ง เช่น "ชาบูน้ำดำ (เน้นสามชั้นสไลด์)" -> "ชาบูน้ำดำ"
             let cleanMenu = currentRolledMenu.replace(/ *\(.*?\)/g, "");
-            // ถ้ามีเครื่องหมายทับ ให้เอาเฉพาะคำแรก เช่น "ข้าวผัดหมู/ไก่" -> "ข้าวผัดหมู"
             cleanMenu = cleanMenu.split('/')[0].trim();
-            
-            // สร้างคำค้นหา เช่น "ร้าน ชาบูน้ำดำ ใกล้ฉัน"
             let searchQuery = encodeURIComponent("ร้าน " + cleanMenu + " ใกล้ฉัน");
             let mapsUrl = "https://www.google.com/maps/search/" + searchQuery;
-            
-            // เปิดแท็บใหม่ไปที่ Google Maps
             window.open(mapsUrl, "_blank");
         }
 
