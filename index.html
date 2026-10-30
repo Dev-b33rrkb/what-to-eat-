@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>แอปกินอะไรดี - มื้อนี้มีคำตอบ</title>
+    
+    <!-- 📱 ตั้งค่าให้เพิ่มลงหน้าจอมือถือได้ (PWA Meta Tags) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="กินอะไรดี?">
+    <meta name="theme-color" content="#FF6B6B">
+
+    <!-- 🌐 Favicon และ ไอคอนหน้าจอมือถือ (ใช้ Emoji แปลงเป็นไอคอนเว็บอัตโนมัติ) -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E<text y=%22.9em%22 font-size=%2290%%3E😋</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E<rect width='100' height='100' rx='20' fill='%23FF6B6B'/><text x='15' y='75' font-size='70'>😋</text></svg>">
+
+    <!-- 📦 ฝัง Web App Manifest แบบ Inline (ไม่ต้องสร้างไฟล์เพิ่มให้วุ่นวาย) -->
+    <link rel="manifest" href='data:application/manifest+json,{"name": "แอปกินอะไรดี", "short_name": "กินอะไรดี", "start_url": "index.html", "display": "standalone", "background_color": "#FFF6F4", "theme_color": "#FF6B6B", "icons": [{"src": "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%%3E<rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%23FF6B6B%22/><text x=%2215%22 y=%2275%22 font-size=%2270%22>😋</text></svg>", "sizes": "192x192", "type": "image/svg+xml"}]}'>
+
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -201,7 +215,7 @@
             customMenuArray = customMenu.split(',').map(item => item.trim()).filter(item => item !== "");
         }
 
-        // ระบบสร้างเสียงเอฟเฟกต์ด้วย Web Audio API (ไม่ต้องโหลดไฟล์เสียงภายนอก)
+        // ระบบสร้างเสียงเอฟเฟกต์ด้วย Web Audio API
         let audioCtx = null;
         function playTickSound(isFinal = false) {
             try {
@@ -228,9 +242,7 @@
 
                 osc.start();
                 osc.stop(audioCtx.currentTime + (isFinal ? 0.3 : 0.05));
-            } catch(e) {
-                // ป้องกันกรณีเบราว์เซอร์บล็อกเสียงอัตโนมัติ
-            }
+            } catch(e) {}
         }
 
         function selectFood(category, element) {
@@ -260,7 +272,6 @@
             closeDrinkModal();
         }
 
-        // ฟังก์ชันสุ่มเวลา 3.5 วินาที พร้อมเสียงวงล้อหมุน
         function randomMenu() {
             let pool = [];
             if (isCustomShop) {
@@ -281,7 +292,7 @@
             document.getElementById('randomBtn').disabled = true;
 
             let startTime = Date.now();
-            let duration = 3500; // เวลาสุ่ม 3.5 วินาที
+            let duration = 3500; 
             let currentInterval = 50;
 
             function runSlot() {
@@ -290,16 +301,14 @@
                 if (elapsedTime < duration) {
                     let randomIndex = Math.floor(Math.random() * pool.length);
                     resultText.innerText = pool[randomIndex];
-                    playTickSound(false); // เล่นเสียงติ๊กๆ ระหว่างหมุน
+                    playTickSound(false);
 
-                    // ค่อยๆ หน่วงความเร็วให้ช้าลงตอนใกล้หมดเวลา (เอฟเฟกต์วงล้อเบรก)
                     currentInterval = 50 + (elapsedTime / duration) * 150;
                     setTimeout(runSlot, currentInterval);
                 } else {
-                    // จบรอบสุ่ม เลือกผลลัพธ์สุดท้าย
                     let finalIndex = Math.floor(Math.random() * pool.length);
                     resultText.innerText = pool[finalIndex];
-                    playTickSound(true); // เล่นเสียงปิ๊งเมื่อหยุด
+                    playTickSound(true);
                     
                     document.getElementById('randomBtn').disabled = false;
                     currentRolledMenu = pool[finalIndex]; 
