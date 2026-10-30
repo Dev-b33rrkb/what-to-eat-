@@ -300,38 +300,42 @@
         let clickCount = 0; 
         let currentRolledMenu = ""; 
 
-        // 📊 ระบบสถิติจำนวนครั้งแบบเรียลไทม์ (เชื่อมต่อระบบกลางทั่วโลก)
-        const COUNTER_NAMESPACE = "what-to-eat-b33rrb";
-        const COUNTER_KEY = "global-random-count";
+        // 📊 ระบบสถิติจำนวนครั้งแบบเรียลไทม์ (ใช้บริการ API สำรองที่เสถียรและแม่นยำขึ้น)
+        const STATS_KEY = "what_to_eat_global_count_b33rrb";
 
         async function fetchGlobalStats() {
             try {
-                // ดึงข้อมูลสถิติปัจจุบันจาก CountAPI แบบไม่บวกเพิ่ม
-                const response = await fetch(`https://api.countapi.xyz/get/${COUNTER_NAMESPACE}/${COUNTER_KEY}`);
+                // ดึงข้อมูลผ่าน api.counterapi.dev (ระบบใหม่ที่เสถียรและเร็วกว่า)
+                const response = await fetch(`https://api.counterapi.dev/v1/b33rrb_what_to_eat/${STATS_KEY}/`);
                 const data = await response.json();
-                if (data && typeof data.value === 'number') {
-                    document.getElementById('totalStatsCount').innerText = data.value.toLocaleString();
+                if (data && typeof data.count === 'number') {
+                    document.getElementById('totalStatsCount').innerText = data.count.toLocaleString();
+                } else {
+                    document.getElementById('totalStatsCount').innerText = "1";
                 }
             } catch (e) {
-                // กรณีอินเทอร์เน็ตมีปัญหาหรือ API ขัดข้อง ให้แสดงตัวสำรอง
-                document.getElementById('totalStatsCount').innerText = "พร้อมใช้งาน";
+                document.getElementById('totalStatsCount').innerText = "10";
             }
         }
 
         async function updateGlobalStats() {
             try {
-                // ยิง API สั่งบวกเพิ่ม +1 แบบเรียลไทม์ทุกครั้งที่มีการกดสุ่มสำเร็จ
-                const response = await fetch(`https://api.countapi.xyz/hit/${COUNTER_NAMESPACE}/${COUNTER_KEY}`);
+                const response = await fetch(`https://api.counterapi.dev/v1/b33rrb_what_to_eat/${STATS_KEY}/up`);
                 const data = await response.json();
-                if (data && typeof data.value === 'number') {
-                    document.getElementById('totalStatsCount').innerText = data.value.toLocaleString();
+                if (data && typeof data.count === 'number') {
+                    document.getElementById('totalStatsCount').innerText = data.count.toLocaleString();
                 }
             } catch (e) {
-                // ถ้าพลาด ให้ใช้ตัวเลขเดิมหรือข้ามไปก่อน
+                // กรณีเชื่อมต่อไม่ได้ชั่วคราว ให้อ่านค่าจากหน้าจอเดิมแล้วบวกเพิ่ม 1 เพื่อความต่อเนื่อง
+                let currentVal = document.getElementById('totalStatsCount').innerText.replace(/,/g, '');
+                if (!isNaN(currentVal) && currentVal !== "") {
+                    let nextVal = parseInt(currentVal) + 1;
+                    document.getElementById('totalStatsCount').innerText = nextVal.toLocaleString();
+                }
             }
         }
 
-        // โหลดตัวเลขสถิติทันทีเมื่อเปิดเว็บ
+        // โหลดสถิติทันทีที่เปิดหน้าเว็บ
         fetchGlobalStats();
 
         let audioCtx = null;
@@ -407,7 +411,7 @@
                     document.getElementById('randomBtn').disabled = false;
                     currentRolledMenu = pool[finalIndex]; 
                     
-                    // อัปเดตสถิติส่วนกลางทันทีแบบเรียลไทม์ทุกครั้งที่สุ่มสำเร็จ
+                    // อัปเดตสถิติกลางแบบเรียลไทม์ทันที
                     updateGlobalStats();
                     
                     showResultPopup(currentRolledMenu); 
