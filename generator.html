@@ -191,7 +191,8 @@
             if(menuItems.length === 0) { alert("กรุณาเพิ่มเมนูอาหารอย่างน้อย 1 เมนูครับ!"); return; }
 
             const menuString = menuItems.join(',');
-            // ลิงก์โฮสต์จริงของคุณถูกฝังไว้เรียบร้อยแล้ว
+            
+            // แก้ไขให้ชี้ไปที่หน้าสุ่มหลัก (index.html) พร้อมพารามิเตอร์ชื่อร้านและเมนูที่ถูกต้องแล้ว
             const baseUrl = "https://dev-b33rrkb.github.io/what-to-eat-/index.html"; 
             
             generatedFinalUrl = `${baseUrl}?shop=${encodeURIComponent(shop)}&menu=${encodeURIComponent(menuString)}`;
